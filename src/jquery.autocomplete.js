@@ -73,6 +73,7 @@
                 autoSelectFirst: false,
                 appendTo: 'body',
                 serviceUrl: null,
+                sourceCallback: noop,
                 lookup: null,
                 onSelect: null,
                 width: 'auto',
@@ -403,17 +404,23 @@
                 that.suggestions = response.suggestions;
                 that.suggest();
             } else if (!that.isBadQuery(q)) {
-                options.params[options.paramName] = q;
-                options.onSearchStart.call(that.element, options.params);
-                $.ajax({
-                    url: options.serviceUrl,
-                    data: options.params,
-                    type: options.type,
-                    dataType: options.dataType
-                }).done(function (data) {
-                    that.processResponse(data, q);
-                    options.onSearchComplete.call(that.element, q);
-                });
+                if (!options.sourceCallback) {
+                    options.params[options.paramName] = q;
+                    options.onSearchStart.call(that.element, options.params);
+                    $.ajax({
+                        url: options.serviceUrl,
+                        data: options.params,
+                        type: options.type,
+                        dataType: options.dataType
+                    }).done(function (data) {
+                        that.processResponse(data, q);
+                        options.onSearchComplete.call(that.element, q, that.processResponse);
+                    });
+                }
+                else
+                {
+                    options.sourceCallback.call(that.element, q, that.processResponse);
+                }
             }
         },
 
